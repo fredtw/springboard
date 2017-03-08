@@ -1,0 +1,87 @@
+---
+title: "Untitled"
+author: "Frederic TWAHIRWA"
+date: "1 mars 2017"
+output: html_document
+---
+```{r}
+
+rm(list=ls(all=TRUE))
+
+```
+
+
+
+```{r }
+
+library(data.table)
+
+```
+
+
+```{r}
+
+student<-fread(file='student-mat.csv')
+
+str(student)
+
+
+student$absences <- as.numeric (student$absences)
+student$G1 <- as.numeric (student$G1)
+student$G2 <- as.numeric (student$G2)
+student$G3 <- as.numeric (student$G3)
+
+cor (student$G1, student$G3)
+cor (student$G2, student$G3)
+
+###################################
+linregA <- lm (G3 ~ Dalc + Walc , data=student)
+summary(linregA)
+
+par (mflow = c(2, 2))
+plot(linregA)
+
+# From the Pr (>|t|) column the regression coefficients are not significant, and then we cannot reject the null hypothesis
+# the grade result is unlerated to alcohol consumption
+
+######################################################################################
+############## What factors may have contributed to the grade results? ###########
+linreg <- lm (G3 ~ age + Medu + Fedu + traveltime + studytime + Dalc + Walc + absences +
+                      romantic + failures + schoolsup + famsup + paid + activities + nursery +
+                      higher + internet + famrel + freetime + goout + G1 + G2 , data=student)
+summary(linreg)
+confint(linreg)
+
+##########################################################################################
+# perform linerar regression with significant parameters  : 
+# failures - number of past class failures (numeric: n if 1<=n<3, else 4)
+# famsup - family educational support (binary: yes or no)
+# schoolsup - extra educational support (binary: yes or no)
+# age - student's age (numeric: from 15 to 22)
+# sex - student's sex (binary: "F" - female or "M" - male)
+
+
+# goout - going out with friends
+
+linregG3 <- lm (G3 ~ ., data=student[, c(1:30, 33)])
+summary(linregG3)
+
+linregG3Significant <- lm (G3 ~ sex + age + studytime + failures + goout + schoolsup + famsup , data=student)
+summary(linregG3Significant)
+
+linregG3Failures <- lm (G3 ~ famsize , data=student)
+summary(linregG3Failures)
+confint(linregG3Failures )
+
+
+par (mflow = c(2, 2))
+plot(linregG3Failures)
+summary(linregG3Failures)
+
+#the past class failures accounts for 13 of the variance in final grade 
+
+linregG3Failures <- lm (G3 ~ failures + goout + failures:absences , data=student)
+summary(linregG3Failures)
+
+# the interaction between the past class failures and the absences is significant and increases the R-squared at 0.165 
+```
