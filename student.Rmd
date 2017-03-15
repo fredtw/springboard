@@ -85,3 +85,46 @@ summary(linregG3Failures)
 
 # the interaction between the past class failures and the absences is significant and increases the R-squared at 0.165 
 ```
+
+
+```{r}
+studentp1 <- mutate(student, fail = as.numeric(G3 < 7))
+studentp <-studentp1 [,-c(31:33)]
+table(studentp$fail)
+# 1/3 fails (130 versus 265)
+
+library ("caTools")
+split<- sample.split (studentp$fail , SplitRatio = 0.7)
+train <- subset (studentp, split == TRUE)
+test<- subset (studentp, split == FALSE)
+
+table(train$fail)
+table(test$fail)
+
+library ("rpart")
+library ("rpart.plot")
+
+studentCART <- rpart(fail~ ., data=train, method= "class")
+prp (studentCART)
+
+#predictCART <- predict (studentCART, newdata=test, method ="class")
+#table(test$fail, predictCART)
+predictCART <- predict (studentCART, newdata=test) # method class no m
+predictCART[1:20, ]
+pred.prob <- predictCART[,2]
+table(test$fail, pred.prob >=0.5)
+
+
+library (ROCR)
+
+predROCR <- prediction(pred.prob, test$fail)
+perfROCR <- performance(predROCR, "tpr", "fpr")
+plot(perfROCR, colorize=TRUE)
+
+# extract AUC value 
+
+performance(predROCR, "auc") @y.values
+
+
+
+```
